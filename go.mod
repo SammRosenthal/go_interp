@@ -1,3 +1,3 @@
-module interp
+module monkey 
 
 go 1.19

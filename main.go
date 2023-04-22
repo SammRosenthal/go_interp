@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-  "interp/repl"
+  "monkey/repl"
 )
 
 func main() {
