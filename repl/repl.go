@@ -3,8 +3,8 @@ package repl
 import (
 	"bufio"
 	"fmt"
-	"go_interp/lexer"
-	"go_interp/token"
+	"interp/lexer"
+	"interp/token"
 	"io"
 )
 

@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"go_interp/token"
+	"interp/token"
 	"testing"
 )
 

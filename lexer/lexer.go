@@ -1,6 +1,6 @@
 package lexer
 
-import "go_interp/token"
+import "interp/token"
 
 type Lexer struct {
 	input        string
@@ -10,91 +10,91 @@ type Lexer struct {
 }
 
 func New(input string) *Lexer {
-	l := &Lexer{input: input}
-	l.readChar()
-	return l
+	lexer := &Lexer{input: input}
+	lexer.readChar()
+	return lexer
 }
 
-func (l *Lexer) readChar() {
-	if l.readPosition >= len(l.input) {
-		l.ch = 0
+func (lexer *Lexer) readChar() {
+	if lexer.readPosition >= len(lexer.input) {
+		lexer.ch = 0
 	} else {
-		l.ch = l.input[l.readPosition]
+		lexer.ch = lexer.input[lexer.readPosition]
 	}
 
-	l.position = l.readPosition
-	l.readPosition += 1
+	lexer.position = lexer.readPosition
+	lexer.readPosition += 1
 }
 
-func (l *Lexer) NextToken() token.Token {
+func (lexer *Lexer) NextToken() token.Token {
 	var tok token.Token
 
-	l.skipWhitespace()
+	lexer.skipWhitespace()
 
-	switch l.ch {
+	switch lexer.ch {
 	case '=':
-		if peekChar(l) == '=' {
-			ch := l.ch
-			l.readChar()
-			literal := string(ch) + string(l.ch)
+		if peekChar(lexer) == '=' {
+			ch := lexer.ch
+			lexer.readChar()
+			literal := string(ch) + string(lexer.ch)
 			tok = token.Token{Type: token.EQ, Literal: literal}
 		} else {
-			tok = newToken(token.ASSIGN, l.ch)
+			tok = newToken(token.ASSIGN, lexer.ch)
 		}
 	case ';':
-		tok = newToken(token.SEMICOLON, l.ch)
+		tok = newToken(token.SEMICOLON, lexer.ch)
 	case '(':
-		tok = newToken(token.LPAREN, l.ch)
+		tok = newToken(token.LPAREN, lexer.ch)
 	case ')':
-		tok = newToken(token.RPAREN, l.ch)
+		tok = newToken(token.RPAREN, lexer.ch)
 	case ',':
-		tok = newToken(token.COMMA, l.ch)
+		tok = newToken(token.COMMA, lexer.ch)
 	case '+':
-		tok = newToken(token.PLUS, l.ch)
+		tok = newToken(token.PLUS, lexer.ch)
 	case '{':
-		tok = newToken(token.LBRACE, l.ch)
+		tok = newToken(token.LBRACE, lexer.ch)
 	case '}':
-		tok = newToken(token.RBRACE, l.ch)
+		tok = newToken(token.RBRACE, lexer.ch)
 	case '!':
-		if peekChar(l) == '=' {
-			ch := l.ch
-			l.readChar()
-			literal := string(ch) + string(l.ch)
+		if peekChar(lexer) == '=' {
+			ch := lexer.ch
+			lexer.readChar()
+			literal := string(ch) + string(lexer.ch)
 			tok = token.Token{Type: token.NOT_EQ, Literal: literal}
 		} else {
-			tok = newToken(token.BANG, l.ch)
+			tok = newToken(token.BANG, lexer.ch)
 		}
 
 	case '-':
-		tok = newToken(token.MINUS, l.ch)
+		tok = newToken(token.MINUS, lexer.ch)
 	case '/':
-		tok = newToken(token.SLASH, l.ch)
+		tok = newToken(token.SLASH, lexer.ch)
 	case '*':
-		tok = newToken(token.ASTERISK, l.ch)
+		tok = newToken(token.ASTERISK, lexer.ch)
 	case '<':
-		tok = newToken(token.LT, l.ch)
+		tok = newToken(token.LT, lexer.ch)
 	case '>':
-		tok = newToken(token.GT, l.ch)
+		tok = newToken(token.GT, lexer.ch)
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
 	default:
-		if isLetter(l.ch) {
-			tok.Literal = l.readIdentifier()
+		if isLetter(lexer.ch) {
+			tok.Literal = lexer.readIdentifier()
 			tok.Type = token.LookupIdent(tok.Literal)
 
 			return tok
-		} else if isDigit(l.ch) {
-			tok.Literal = l.readNumber()
+		} else if isDigit(lexer.ch) {
+			tok.Literal = lexer.readNumber()
 			tok.Type = token.INT
 
 			return tok
 		} else {
-			tok = newToken(token.ILLEGAL, l.ch)
+			tok = newToken(token.ILLEGAL, lexer.ch)
 		}
 	}
 
-	l.readChar()
+	lexer.readChar()
 	return tok
 }
 

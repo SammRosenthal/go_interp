@@ -1,3 +1,3 @@
-module go_interp
+module interp
 
 go 1.19
