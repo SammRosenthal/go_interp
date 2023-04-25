@@ -48,14 +48,16 @@ func (parser *Parser) Errors() []string {
 	return parser.errors
 }
 
-// // // // // // // // // // // // // // // // // // //
-// // // // // // // // Private // // // // // // // //
-// // // // // // // // // // // // // // // // // //
+/***********************************************/
+/****************** Private ********************/
+/***********************************************/
 
 func (parser *Parser) parseStatement() ast.Statement {
 	switch parser.curToken.Type {
 	case token.LET:
 		return parser.parseLetStatement()
+	case token.RETURN:
+		return parser.parseReturnStatement()
 	default:
 		return nil
 	}
@@ -84,6 +86,20 @@ func (parser *Parser) parseLetStatement() *ast.LetStatement {
 	for !parser.curTokenIs(token.SEMICOLON) {
 		parser.nextToken()
 	}
+
+	return stmt
+}
+
+func (parser *Parser) parseReturnStatement() *ast.ReturnStatement {
+	stmt := &ast.ReturnStatement{
+		Token: parser.curToken,
+	}
+
+  parser.nextToken()
+
+  for !parser.curTokenIs(token.SEMICOLON) {
+    parser.nextToken()
+  }
 
 	return stmt
 }
