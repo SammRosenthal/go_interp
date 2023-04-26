@@ -5,20 +5,44 @@ import (
 	"monkey/ast"
 	"monkey/lexer"
 	"monkey/token"
+	"strconv"
 )
 
 type Parser struct {
 	lexer     *lexer.Lexer
+	errors    []string
 	curToken  token.Token
 	peekToken token.Token
-	errors    []string
+
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFns  map[token.TokenType]infixParseFn
 }
+
+type (
+	prefixParseFn func() ast.Expression
+	infixParseFn  func(ast.Expression) ast.Expression
+)
+
+const (
+	_ int = iota
+	LOWEST
+	EQUALS      // =
+	LESSGREATER // > or <
+	SUM         // +
+	PRODUCT     // *
+	PREFIX      // -X or !X
+	CALL        // myFunc(X)
+)
 
 func New(l *lexer.Lexer) *Parser {
 	parser := &Parser{
 		lexer:  l,
 		errors: []string{},
 	}
+
+	parser.prefixParseFns = make(map[token.TokenType]prefixParseFn)
+	parser.registerPrefix(token.IDENT, parser.parseIdentifier)
+	parser.registerPrefix(token.INT, parser.parseIntegerLiteral)
 
 	parser.nextToken()
 	parser.nextToken()
@@ -49,9 +73,12 @@ func (parser *Parser) Errors() []string {
 }
 
 /***********************************************/
-/****************** Private ********************/
+/*************** PRIVATE BOYS ******************/
 /***********************************************/
 
+/***********************************************/
+/**************** Statements *******************/
+/***********************************************/
 func (parser *Parser) parseStatement() ast.Statement {
 	switch parser.curToken.Type {
 	case token.LET:
@@ -59,7 +86,7 @@ func (parser *Parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return parser.parseReturnStatement()
 	default:
-		return nil
+		return parser.parseExpressionStatement()
 	}
 }
 
@@ -95,15 +122,70 @@ func (parser *Parser) parseReturnStatement() *ast.ReturnStatement {
 		Token: parser.curToken,
 	}
 
-  parser.nextToken()
+	parser.nextToken()
 
-  for !parser.curTokenIs(token.SEMICOLON) {
-    parser.nextToken()
-  }
+	for !parser.curTokenIs(token.SEMICOLON) {
+		parser.nextToken()
+	}
 
 	return stmt
 }
 
+/***********************************************/
+/**************** Expressions ******************/
+/***********************************************/
+
+func (parser *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	parser.prefixParseFns[tokenType] = fn
+}
+func (parser *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	parser.infixParseFns[tokenType] = fn
+}
+
+func (parser *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	stmt := &ast.ExpressionStatement{
+		Token: parser.curToken,
+	}
+
+	stmt.Expression = parser.parseExpression(LOWEST)
+
+	if parser.peekTokenIs(token.SEMICOLON) {
+		parser.nextToken()
+	}
+
+	return stmt
+}
+
+func (parser *Parser) parseExpression(precedence int) ast.Expression {
+	prefix := parser.prefixParseFns[parser.curToken.Type]
+	if prefix == nil {
+		return nil
+	}
+
+	leftExp := prefix()
+
+	return leftExp
+}
+
+func (parser *Parser) parseIntegerLiteral() ast.Expression {
+	lit := &ast.IntegerLiteral{
+		Token: parser.curToken,
+	}
+
+	value, err := strconv.ParseInt(parser.curToken.Literal, 0, 64)
+	if err != nil {
+		msg := fmt.Sprintf("could not parse %q as integer", parser.curToken.Literal)
+		parser.errors = append(parser.errors, msg)
+    return nil
+	}
+
+  lit.Value = value
+  return lit
+}
+
+/***********************************************/
+/****************** Helpers ********************/
+/***********************************************/
 func (parser *Parser) curTokenIs(t token.TokenType) bool {
 	return parser.curToken.Type == t
 }
@@ -114,7 +196,7 @@ func (parser *Parser) expectPeek(t token.TokenType) bool {
 		return true
 	}
 
-  parser.peekError(t)
+	parser.peekError(t)
 	return false
 }
 
@@ -131,4 +213,11 @@ func (parser *Parser) peekError(t token.TokenType) {
 func (parser *Parser) nextToken() {
 	parser.curToken = parser.peekToken
 	parser.peekToken = parser.lexer.NextToken()
+}
+
+func (parser *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{
+		Token: parser.curToken,
+		Value: parser.curToken.Literal,
+	}
 }

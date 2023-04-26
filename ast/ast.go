@@ -35,7 +35,6 @@ func (program *Program) TokenLiteral() string {
 }
 
 type ExpressionStatement struct {
-	Statement
 	Token      token.Token // token.???
 	Expression Expression
 }
@@ -44,8 +43,7 @@ func (ls *ExpressionStatement) statementNode()       {}
 func (ls *ExpressionStatement) TokenLiteral() string { return ls.Token.Literal }
 
 type ReturnStatement struct {
-	Statement
-	Token token.Token // token.RETURN
+	Token       token.Token // token.RETURN
 	ReturnValue Expression
 }
 
@@ -53,7 +51,6 @@ func (ls *ReturnStatement) statementNode()       {}
 func (ls *ReturnStatement) TokenLiteral() string { return ls.Token.Literal }
 
 type LetStatement struct {
-	Statement
 	Token token.Token // token.LET
 	Name  *Identifier
 	Value Expression
@@ -70,6 +67,15 @@ type Identifier struct {
 func (i *Identifier) expressionNode()      {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
 
+type IntegerLiteral struct {
+	Token token.Token
+	Value int64
+}
+
+func (il *IntegerLiteral) expressionNode()      {}
+func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
+func (il *IntegerLiteral) String() string       { return il.Token.Literal }
+
 func (p *Program) String() string {
 	var out bytes.Buffer
 
@@ -81,7 +87,7 @@ func (p *Program) String() string {
 }
 
 func (i *Identifier) String() string {
-  return i.Value;
+	return i.Value
 }
 
 func (ls *LetStatement) String() string {
@@ -95,7 +101,7 @@ func (ls *LetStatement) String() string {
 		out.WriteString(ls.Value.String())
 	}
 
-  out.WriteString(";")
+	out.WriteString(";")
 
 	return out.String()
 }
@@ -103,13 +109,13 @@ func (ls *LetStatement) String() string {
 func (rs *ReturnStatement) String() string {
 	var out bytes.Buffer
 
-  out.WriteString(rs.TokenLiteral() + " ")
+	out.WriteString(rs.TokenLiteral() + " ")
 
-  if rs.ReturnValue != nil {
-    out.WriteString(rs.ReturnValue.String())
-  }
+	if rs.ReturnValue != nil {
+		out.WriteString(rs.ReturnValue.String())
+	}
 
-  out.WriteString(";")
+	out.WriteString(";")
 
 	return out.String()
 }
